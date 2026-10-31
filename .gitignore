@@ -1,0 +1,6 @@
+/target
+/web/dist
+/assets/art/*.kra
+/assets/art/*.kra~
+*.png~
+.DS_Store
