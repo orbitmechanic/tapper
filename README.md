@@ -172,6 +172,9 @@ BEVY_ASSET_ROOT=$PWD cargo run -- --start --demo --screen 6 \
   --frame 280 --screenshot shots/punk.png
 BEVY_ASSET_ROOT=$PWD cargo run -- --bonus --screen 5 \
   --frame 260 --screenshot shots/bonus.png
+# force a full mug off the door to exercise death -> respawn
+BEVY_ASSET_ROOT=$PWD cargo run -- --start --mug-break --screen 1 \
+  --frame 420 --screenshot shots/mug_break_respawn.png
 ```
 
 `--demo` runs a small auto-bartender that catches empties and serves the closest

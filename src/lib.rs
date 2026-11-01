@@ -17,6 +17,7 @@ use bevy::camera::ScalingMode;
 use bevy::image::ImagePlugin;
 use bevy::prelude::*;
 use bevy::render::view::screenshot::{Screenshot, ScreenshotCaptured, save_to_disk};
+use bevy::sprite::Anchor;
 use bevy::ui_render::prelude::UiAntiAlias;
 use bevy::window::WindowResolution;
 
@@ -50,6 +51,7 @@ pub struct CaptureConfig {
     pub screen: Option<usize>,
     pub bonus: bool,
     pub gameover: bool,
+    pub mug_break: bool,
 }
 
 pub fn run() {
@@ -96,6 +98,10 @@ pub fn run() {
     .add_systems(
         OnEnter(AppState::Bonus),
         (enter_bonus, spawn_bonus_ui_system).chain(),
+    )
+    .add_systems(
+        Update,
+        mug_break_scenario.run_if(in_state(AppState::InGame)),
     )
     .add_systems(
         Update,
@@ -165,6 +171,41 @@ fn publish_state_bridge(
         patrons.iter().count(),
         mugs.iter().count(),
     );
+}
+
+/// Reproduction hook for the dropped-mug life-loss path: clear the current
+/// patrons, then slide a full mug off the door so the death/respawn transition
+/// runs in the real renderer. Used by `--mug-break` QA captures.
+fn mug_break_scenario(
+    capture: Res<CaptureConfig>,
+    mut done: Local<bool>,
+    game: Res<Game>,
+    patrons: Query<Entity, With<Patron>>,
+    mut commands: Commands,
+) {
+    if !capture.mug_break || *done || game.screen_age < 0.5 {
+        return;
+    }
+    *done = true;
+    for entity in &patrons {
+        commands.entity(entity).despawn();
+    }
+    let keg_right = world::screen_plan(game.screen)[0].keg_right;
+    commands.spawn((
+        Mug {
+            lane: 0,
+            slot: world::DOOR_SLOT + 0.15,
+            kind: MugKind::Full,
+        },
+        Sprite::default(),
+        Transform::from_xyz(
+            world::slot_x(keg_right, world::DOOR_SLOT + 0.15),
+            world::LANE_Y[0] + 7.0,
+            5.0,
+        ),
+        Anchor::CENTER,
+        ScreenEntity,
+    ));
 }
 
 fn not_paused(paused: Res<Paused>) -> bool {
@@ -369,6 +410,10 @@ fn parse_args() -> CaptureConfig {
             }
             "--gameover" => {
                 cfg.gameover = true;
+            }
+            "--mug-break" => {
+                cfg.mug_break = true;
+                cfg.start = true;
             }
             _ => {}
         }
