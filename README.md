@@ -188,6 +188,8 @@ cargo install wasm-bindgen-cli --version 0.2.130 --locked
 
 ./tools/build_web.sh          # stages web/dist
 python3 -m http.server 8123 --directory web/dist
+node tools/verify_web.mjs
+node tools/verify_respawn.mjs   # serve a lane, drop a mug, assert respawn
 ```
 
 The build pins `wasm-bindgen` to the version in `Cargo.lock` (0.2.130), runs

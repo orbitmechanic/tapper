@@ -72,6 +72,7 @@ pub fn publish_state(
     slot: f32,
     patrons: usize,
     mugs: usize,
+    lane_patrons: [usize; 4],
 ) {
     #[cfg(target_arch = "wasm32")]
     {
@@ -89,6 +90,9 @@ pub fn publish_state(
         set("slot", slot as f64);
         set("patrons", patrons as f64);
         set("mugs", mugs as f64);
+        for (lane, count) in lane_patrons.iter().enumerate() {
+            set(&format!("p{lane}"), *count as f64);
+        }
         let _ = js_sys::Reflect::set(&js_sys::global(), &JsValue::from_str("__tapperState"), &obj);
     }
 }
