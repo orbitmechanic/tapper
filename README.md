@@ -46,9 +46,16 @@ because collecting a tip means running away from the keg.
   cabinet web shell.
 - **Playable on phones** — a native HTML pointer bridge feeds the Rust game;
   the touch pad is not synthetic keyboard input.
-- **Verified** — 20 headless tests (12 unit + 8 integration), clippy clean,
+- **Verified** — 22 headless tests (12 unit + 10 integration), clippy clean,
   captured screenshots from the running binary, and browser-tested at desktop
   and 390x844 mobile sizes.
+
+## On a phone
+
+![TAPPER on a phone](shots/web_mobile_game.png)
+
+The 960x720 framebuffer is scaled by CSS, the HUD stays pixel-crisp, and the
+touch pad writes into the same Rust action layer as the keyboard.
 
 ## Screenshots
 
@@ -152,10 +159,10 @@ cargo test
 cargo run
 ```
 
-The suite is 20 tests: level tables and difficulty curves, slot geometry,
+The suite is 22 tests: level tables and difficulty curves, slot geometry,
 scoring and extra lives, patron catching, door exits, empty-mug catches and
-breaks, patron grabs, tips/dancers, screen-clear transitions and the bonus
-shuffle. Tests run headless with `MinimalPlugins` and deterministic time.
+breaks, patron grabs, tips/dancers, screen-clear transitions, the bonus
+shuffle and both state transitions into and out of the shell game. Tests run headless with `MinimalPlugins` and deterministic time.
 
 Screenshots are captured from the real renderer:
 

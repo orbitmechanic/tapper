@@ -5,6 +5,7 @@ use bevy::state::app::StatesPlugin;
 use bevy::time::TimeUpdateStrategy;
 use tapper::AppState;
 use tapper::audio::Sfx;
+use tapper::bonus::{Bonus, BonusPhase, update_bonus};
 use tapper::fx::Fx;
 use tapper::game::*;
 use tapper::input::Actions;
@@ -19,6 +20,7 @@ fn base_app() -> App {
         .init_resource::<Rng>()
         .init_resource::<Fx>()
         .init_resource::<Actions>()
+        .init_resource::<Bonus>()
         .init_state::<AppState>();
     app
 }
@@ -198,4 +200,49 @@ fn clearing_the_last_patron_starts_the_clear_phase() {
     assert_eq!(game.phase, Phase::Cleared);
     assert_eq!(game.score, SCREEN_CLEAR_BONUS);
     assert!(game.pending.is_some(), "saloon clears into the bonus game");
+}
+
+#[test]
+fn milestone_clear_opens_the_bonus_round() {
+    let mut app = base_app();
+    app.add_systems(Update, tick_phase);
+    {
+        let mut game = app.world_mut().resource_mut::<Game>();
+        game.screen = 1;
+        game.phase = Phase::Cleared;
+        game.phase_timer = 0.0;
+        game.pending = Some(PendingStage {
+            next_screen: 2,
+            next_loop: 0,
+        });
+    }
+
+    advance(&mut app, 0.05);
+
+    let next = app.world().resource::<NextState<AppState>>();
+    assert!(matches!(next, NextState::Pending(AppState::Bonus)));
+}
+
+#[test]
+fn bonus_reveal_advances_to_the_next_screen() {
+    let mut app = base_app();
+    app.add_systems(Update, update_bonus);
+    {
+        let mut bonus = app.world_mut().resource_mut::<Bonus>();
+        bonus.phase = BonusPhase::Reveal;
+        bonus.timer = 0.0;
+        bonus.pending = Some(PendingStage {
+            next_screen: 0,
+            next_loop: 1,
+        });
+    }
+
+    advance(&mut app, 0.05);
+
+    let game = app.world().resource::<Game>();
+    assert_eq!(game.screen, 0);
+    assert_eq!(game.loop_no, 1);
+    assert!(game.needs_load);
+    let next = app.world().resource::<NextState<AppState>>();
+    assert!(matches!(next, NextState::Pending(AppState::InGame)));
 }
