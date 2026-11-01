@@ -14,7 +14,7 @@ import { spawn } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { setTimeout as sleep } from 'node:timers/promises';
 
-const URL = process.argv[2] || 'http://127.0.0.1:8123/';
+const TARGET_URL = process.argv[2] || 'http://127.0.0.1:8123/';
 const OUT = new URL('../shots/', import.meta.url).pathname;
 mkdirSync(OUT, { recursive: true });
 
@@ -125,7 +125,7 @@ function state() {
 }
 
 async function boot() {
-  await send('Page.navigate', { url: URL });
+  await send('Page.navigate', { url: TARGET_URL });
   await waitFor(
     `!document.getElementById('start-overlay').hidden`,
     'game boot',
