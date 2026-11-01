@@ -321,6 +321,14 @@ pub fn tick_phase(
                     sfx.write(Sfx::GameOver);
                     next.set(crate::AppState::GameOver);
                 } else {
+                    // Return to play before the screen loader runs. Leaving
+                    // this on Dying made every later frame re-enter this
+                    // branch and reload the whole screen in a loop.
+                    game.phase = Phase::Normal;
+                    game.phase_timer = 0.0;
+                    game.screen_age = 0.0;
+                    game.dancers = 0.0;
+                    game.pending = None;
                     game.needs_load = true;
                     game.show_banner("BACK TO WORK", 1.6);
                 }
