@@ -46,7 +46,7 @@ because collecting a tip means running away from the keg.
   cabinet web shell.
 - **Playable on phones** — a native HTML pointer bridge feeds the Rust game;
   the touch pad is not synthetic keyboard input.
-- **Verified** — 22 headless tests (12 unit + 10 integration), clippy clean,
+- **Verified** — 23 headless tests (12 unit + 11 integration), clippy clean,
   captured screenshots from the running binary, and browser-tested at desktop
   and 390x844 mobile sizes.
 
@@ -159,7 +159,7 @@ cargo test
 cargo run
 ```
 
-The suite is 22 tests: level tables and difficulty curves, slot geometry,
+The suite is 23 tests: level tables and difficulty curves, slot geometry,
 scoring and extra lives, patron catching, door exits, empty-mug catches and
 breaks, patron grabs, tips/dancers, screen-clear transitions, the bonus
 shuffle and both state transitions into and out of the shell game. Tests run headless with `MinimalPlugins` and deterministic time.
@@ -172,6 +172,9 @@ BEVY_ASSET_ROOT=$PWD cargo run -- --start --demo --screen 6 \
   --frame 280 --screenshot shots/punk.png
 BEVY_ASSET_ROOT=$PWD cargo run -- --bonus --screen 5 \
   --frame 260 --screenshot shots/bonus.png
+# force a full mug off the door to exercise death -> respawn
+BEVY_ASSET_ROOT=$PWD cargo run -- --start --mug-break --screen 1 \
+  --frame 420 --screenshot shots/mug_break_respawn.png
 ```
 
 `--demo` runs a small auto-bartender that catches empties and serves the closest

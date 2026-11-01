@@ -246,3 +246,33 @@ fn bonus_reveal_advances_to_the_next_screen() {
     let next = app.world().resource::<NextState<AppState>>();
     assert!(matches!(next, NextState::Pending(AppState::InGame)));
 }
+
+#[test]
+fn losing_a_life_resumes_play_instead_of_reloading_forever() {
+    let mut app = base_app();
+    app.add_systems(Update, tick_phase);
+    {
+        let mut game = app.world_mut().resource_mut::<Game>();
+        game.lives = 2;
+        game.phase = Phase::Dying;
+        game.phase_timer = 0.0;
+        game.screen_age = 9.0;
+        game.needs_load = false;
+    }
+
+    advance(&mut app, 0.05);
+
+    let game = app.world().resource::<Game>();
+    assert_eq!(game.phase, Phase::Normal, "respawn must leave Dying");
+    assert_eq!(game.phase_timer, 0.0);
+    assert_eq!(game.screen_age, 0.0);
+    assert!(game.needs_load, "the loader must run once");
+
+    // Pretend the loader consumed the flag; the next tick must not re-trigger.
+    app.world_mut().resource_mut::<Game>().needs_load = false;
+    advance(&mut app, 0.05);
+    let game = app.world().resource::<Game>();
+    assert_eq!(game.phase, Phase::Normal);
+    assert!(!game.needs_load, "must not reload every frame");
+    assert_eq!(game.lives, 2);
+}
