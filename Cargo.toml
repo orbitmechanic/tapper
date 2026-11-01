@@ -1,0 +1,45 @@
+[package]
+name = "tapper-last-call"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.97"
+description = "TAPPER: LAST CALL — a 2D arcade bartending game in Rust and Bevy"
+license = "MIT"
+repository = "https://github.com/orbitmechanic/tapper"
+keywords = ["bevy", "game", "arcade", "pixel-art", "tapper"]
+categories = ["games"]
+
+[lib]
+name = "tapper"
+path = "src/lib.rs"
+
+[[bin]]
+name = "tapper-last-call"
+path = "src/main.rs"
+
+[dependencies]
+bevy = { version = "0.20.1", features = ["wav", "debug"] }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "0.2.130"
+js-sys = "0.3"
+web-sys = { version = "0.3", features = ["Window"] }
+
+[profile.dev]
+opt-level = 1
+debug = 0
+
+[profile.dev.package."*"]
+opt-level = 3
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+
+[profile.wasm-release]
+inherits = "release"
+opt-level = "z"
+lto = "thin"
+codegen-units = 1
+panic = "abort"
+strip = "debuginfo"
