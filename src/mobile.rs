@@ -77,7 +77,7 @@ pub fn publish_state(
     {
         use wasm_bindgen::JsValue;
         let obj = js_sys::Object::new();
-        let mut set = |key: &str, value: f64| {
+        let set = |key: &str, value: f64| {
             let _ = js_sys::Reflect::set(&obj, &JsValue::from_str(key), &JsValue::from_f64(value));
         };
         set("score", score as f64);

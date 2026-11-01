@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>TAPPER: LAST CALL — play in your browser</title>
+  <meta name="description" content="Four bars. Four crowds. One bartender. An original 2D arcade bartending game in Rust and Bevy, playable with keyboard or touch.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="TAPPER: LAST CALL">
+  <meta property="og:description" content="Serve the crowd, catch the empties, chase the tips. An original Rust + Bevy arcade game.">
+  <meta property="og:url" content="https://orbitmechanic.github.io/tapper-web/">
+  <meta property="og:image" content="https://orbitmechanic.github.io/tapper-web/assets/art/banner.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="TAPPER: LAST CALL">
+  <meta name="twitter:description" content="Four bars. Four crowds. One bartender. A Rust + Bevy arcade game.">
+  <meta name="twitter:image" content="https://orbitmechanic.github.io/tapper-web/assets/art/banner.png">
+  <link rel="canonical" href="https://orbitmechanic.github.io/tapper-web/">
+  <meta name="theme-color" content="#100a12">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="assets/fonts/Saloon17.ttf" as="font" type="font/ttf" crossorigin>
+  <script>
+    // Browsers create Web Audio suspended until a trusted gesture. Bevy creates
+    // its AudioContext during boot; resume every context on the first real tap.
+    (() => {
+      const Native = window.AudioContext || window.webkitAudioContext;
+      if (!Native) return;
+      const contexts = [];
+      function Wrapped(...args) {
+        const ctx = new Native(...args);
+        contexts.push(ctx);
+        return ctx;
+      }
+      Wrapped.prototype = Native.prototype;
+      window.AudioContext = Wrapped;
+      if (window.webkitAudioContext) window.webkitAudioContext = Wrapped;
+      const resume = () => contexts.forEach((ctx) => {
+        if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+      });
+      ['pointerdown', 'keydown', 'touchstart'].forEach((event) => {
+        window.addEventListener(event, resume, { capture: true, passive: true });
+      });
+    })();
+  </script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="atmosphere" aria-hidden="true"></div>
+
+  <header class="top">
+    <a class="back" href="https://orbitmechanic.github.io/">← Gallifrey Station</a>
+    <span class="bay-label">BAY 07 / RECENT LAUNCH</span>
+    <nav class="links" aria-label="Game links">
+      <a href="https://github.com/orbitmechanic/tapper" target="_blank" rel="noopener">Source ↗</a>
+      <button id="fullscreen" type="button">Fullscreen ⤢</button>
+    </nav>
+  </header>
+
+  <main>
+    <section class="intro">
+      <p class="kicker"><span></span> A RUST + BEVY ARCADE TRIBUTE</p>
+      <h1>TAPPER<span>: LAST CALL</span></h1>
+      <p class="lede">Four bars. Four crowds. One bartender. Pour fast, slide the mugs, catch every empty, and keep the last call from turning into a brawl.</p>
+      <p class="byline">Original art · original chiptune · four themed bars · endless loop</p>
+    </section>
+
+    <section class="cabinet" id="cabinet" aria-label="Tapper: Last Call game">
+      <div class="marquee" aria-hidden="true">
+        <span class="marquee-star">★</span>
+        <span>TAPPER</span>
+        <em>LAST CALL</em>
+        <span class="marquee-star">★</span>
+      </div>
+
+      <div class="frame">
+        <canvas id="game-canvas" width="960" height="720" tabindex="0" aria-label="Tapper game screen"></canvas>
+
+        <div id="loading" class="veil">
+          <div class="loader" aria-hidden="true"></div>
+          <p>WIPING THE BAR…</p>
+          <p class="small">Bevy is warming up the taps.</p>
+        </div>
+
+        <div id="start-overlay" class="veil clickable" hidden>
+          <button id="start-button" class="start-button" type="button">
+            <span>▶</span> TAP TO START
+          </button>
+          <p class="small" id="start-note">Sound starts after your first tap.</p>
+        </div>
+
+        <div id="boot-error" class="veil" hidden>
+          <p class="fail">THE BAR IS CLOSED.</p>
+          <p class="small">This game needs JavaScript, WebGL 2 and WebAssembly. Try a current Chrome, Firefox, Edge or Safari.</p>
+        </div>
+      </div>
+
+      <div id="touch-controls" class="touch-controls" aria-label="Touch game controls">
+        <div class="dpad">
+          <button class="pad up" data-pad="up" type="button" aria-label="Previous lane">▲<span>LANE</span></button>
+          <button class="pad left" data-pad="left" type="button" aria-label="Run toward the door">◀<span>RUN</span></button>
+          <button class="pad right" data-pad="right" type="button" aria-label="Run toward the keg">▶<span>RUN</span></button>
+          <button class="pad down" data-pad="down" type="button" aria-label="Next lane">▼<span>LANE</span></button>
+        </div>
+        <div class="actions">
+          <button class="pour" data-pad="pour" type="button" aria-label="Pour and serve">
+            POUR
+            <span>SERVE</span>
+          </button>
+          <div class="utility">
+            <button data-pad="pause" type="button" aria-label="Pause">II</button>
+            <button data-pad="mute" type="button" aria-label="Mute">M</button>
+          </div>
+        </div>
+      </div>
+
+      <p class="mobile-hint" id="mobile-hint">Rotate sideways for a bigger bar. The pad works in portrait too.</p>
+
+      <div class="controls" aria-label="Keyboard controls">
+        <span><kbd>W</kbd><kbd>S</kbd> change lane</span>
+        <span><kbd>A</kbd><kbd>D</kbd> run the bar</span>
+        <span><kbd>SPACE</kbd> pour &amp; serve</span>
+        <span><kbd>P</kbd> pause</span>
+        <span><kbd>M</kbd> mute</span>
+      </div>
+    </section>
+
+    <section class="howto">
+      <div>
+        <h2>How to tend the bar</h2>
+        <p>Patrons walk in from the doors and advance on your kegs. Pour a mug and it slides down the lane to the first customer who can catch it. A catch pushes them back; if they clear the door, they are served.</p>
+      </div>
+      <div>
+        <h2>Do not drop the round</h2>
+        <p>Empty mugs come back to the keg and must be caught, and a full mug that reaches the door breaks. Three mistakes end the shift. Tips trigger a short dancing distraction and pay 1,500.</p>
+      </div>
+      <div>
+        <h2>Four bars, one night</h2>
+        <p>Thirteen screens across the saloon, sports bar, punk bar and alien bar, then loop with faster crowds. Clear a theme to play the shell game: one can is still, five are shaken.</p>
+      </div>
+    </section>
+
+    <footer>
+      <p>Rust + Bevy 0.20.1 · original Krita pixel art · synthesized chiptune · <a href="https://github.com/orbitmechanic/tapper" target="_blank" rel="noopener">source on GitHub</a></p>
+      <p class="tiny">A Gallifrey Station launch. Keyboard on desktop; the on-screen pad appears on touch devices.</p>
+    </footer>
+  </main>
+
+  <noscript><p class="noscript">TAPPER needs JavaScript and WebGL 2.</p></noscript>
+
+  <script>
+    // ── Input bridge ────────────────────────────────────────────────────────
+    // The Rust game reads this plain object every frame. This is deliberately
+    // not synthetic KeyboardEvents: winit can ignore untrusted key events.
+    const input = {
+      up: 0, down: 0, left: 0, right: 0, pour: 0,
+      upSeq: 0, downSeq: 0, leftSeq: 0, rightSeq: 0, pourSeq: 0,
+      startSeq: 0, pauseSeq: 0, muteSeq: 0, touch: 0
+    };
+    window.__tapperInput = input;
+
+    const coarse = () => window.matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0;
+    function syncTouchMode() {
+      const touch = coarse();
+      input.touch = touch ? 1 : 0;
+      document.body.classList.toggle('touch', touch);
+    }
+    syncTouchMode();
+    window.addEventListener('resize', syncTouchMode, { passive: true });
+
+    const buttons = new Set();
+    const resetPad = (action) => {
+      if (action in input) input[action] = 0;
+    };
+
+    document.querySelectorAll('[data-pad]').forEach((button) => {
+      const action = button.dataset.pad;
+      buttons.add(button);
+      let releaseTimer = 0;
+
+      const press = (event) => {
+        event.preventDefault();
+        clearTimeout(releaseTimer);
+        button.classList.add('active');
+        try { button.setPointerCapture(event.pointerId); } catch (_) {}
+        if (action === 'pause') input.pauseSeq += 1;
+        else if (action === 'mute') input.muteSeq += 1;
+        else if (action === 'start') input.startSeq += 1;
+        else {
+          input[action] = 1;
+          const seq = action + 'Seq';
+          if (seq in input) input[seq] += 1;
+        }
+      };
+
+      const release = (event) => {
+        if (event) event.preventDefault();
+        button.classList.remove('active');
+        if (action in input) {
+          // Hold the flag briefly so a fast tap still lands on a Rust frame.
+          releaseTimer = setTimeout(() => resetPad(action), 120);
+        }
+      };
+
+      button.addEventListener('pointerdown', press);
+      button.addEventListener('pointerup', release);
+      button.addEventListener('pointercancel', release);
+      button.addEventListener('pointerleave', release);
+      button.addEventListener('contextmenu', (event) => event.preventDefault());
+    });
+
+    window.addEventListener('blur', () => {
+      ['up', 'down', 'left', 'right', 'pour'].forEach(resetPad);
+      buttons.forEach((button) => button.classList.remove('active'));
+    });
+  </script>
+
+  <script type="module">
+    import init from './tapper.js';
+
+    const canvas = document.getElementById('game-canvas');
+    const loading = document.getElementById('loading');
+    const overlay = document.getElementById('start-overlay');
+    const startButton = document.getElementById('start-button');
+    const startNote = document.getElementById('start-note');
+    const errorVeil = document.getElementById('boot-error');
+    const input = window.__tapperInput;
+    const frame = canvas.parentElement;
+    let ready = false;
+
+    // Keep the game's 960x720 arcade framebuffer intact and scale the whole
+    // canvas with CSS. This preserves the pixel grid and keeps Bevy's UI at
+    // the resolution it was designed for on phones and tablets.
+    function fitCanvas() {
+      const scale = Math.min(frame.clientWidth / 960, frame.clientHeight / 720);
+      canvas.style.transform = `scale(${scale})`;
+      canvas.style.left = `${Math.round((frame.clientWidth - 960 * scale) / 2)}px`;
+      canvas.style.top = `${Math.round((frame.clientHeight - 720 * scale) / 2)}px`;
+    }
+    fitCanvas();
+    new ResizeObserver(fitCanvas).observe(frame);
+    window.addEventListener('orientationchange', () => setTimeout(fitCanvas, 120));
+
+    function focusGame() {
+      try { canvas.focus({ preventScroll: true }); } catch (_) {}
+    }
+
+    function begin() {
+      if (!ready) return;
+      overlay.hidden = true;
+      input.startSeq += 1;
+      focusGame();
+    }
+
+    startButton.addEventListener('pointerdown', (event) => {
+      event.preventDefault();
+      begin();
+    });
+
+    canvas.addEventListener('pointerdown', () => {
+      focusGame();
+      input.startSeq += 1;
+    });
+
+    canvas.addEventListener('contextmenu', (event) => event.preventDefault());
+
+    document.getElementById('fullscreen').addEventListener('click', async () => {
+      const cabinet = document.getElementById('cabinet');
+      try {
+        if (!document.fullscreenElement) {
+          await (cabinet.requestFullscreen ? cabinet.requestFullscreen() : Promise.reject());
+        } else {
+          await document.exitFullscreen();
+        }
+      } catch (_) {
+        // iOS Safari and some embedded browsers block element fullscreen.
+        document.body.classList.toggle('pseudo-fullscreen');
+      }
+    });
+
+    try {
+      await init();
+      ready = true;
+      loading.hidden = true;
+      overlay.hidden = false;
+      if (window.matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0) {
+        startNote.textContent = 'Tap the pad below to run the bar. Sound starts after your first tap.';
+      }
+      // winit focuses the canvas while it boots; keep the marquee in view.
+      requestAnimationFrame(() => window.scrollTo({ top: 0, left: 0, behavior: 'instant' }));
+    } catch (err) {
+      console.error(err);
+      loading.hidden = true;
+      errorVeil.hidden = false;
+    }
+  </script>
+</body>
+</html>
