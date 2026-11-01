@@ -266,6 +266,11 @@ fn losing_a_life_resumes_play_instead_of_reloading_forever() {
     assert_eq!(game.phase, Phase::Normal, "respawn must leave Dying");
     assert_eq!(game.phase_timer, 0.0);
     assert_eq!(game.screen_age, 0.0);
+    assert_eq!(
+        game.lanes.map(|lane| lane.remaining),
+        [1, 1, 1, 1],
+        "the crowd must be restored, not counted as a clear"
+    );
     assert!(game.needs_load, "the loader must run once");
 
     // Pretend the loader consumed the flag; the next tick must not re-trigger.

@@ -194,6 +194,21 @@ impl Game {
         );
     }
 
+    /// Restore the current screen's crowd after a lost shift. The served
+    /// customers from the failed attempt must not count toward a screen clear.
+    pub fn reset_crowd(&mut self) {
+        let plan = screen_plan(self.screen);
+        for (lane, p) in plan.iter().enumerate() {
+            self.lanes[lane] = LaneState {
+                remaining: p.count,
+                spawn_timer: 0.35 + lane as f32 * 0.42,
+                keg_right: p.keg_right,
+            };
+        }
+        self.screen_age = 0.0;
+        self.dancers = 0.0;
+    }
+
     pub fn show_banner(&mut self, text: impl Into<String>, seconds: f32) {
         self.banner = text.into();
         self.banner_timer = seconds;
@@ -326,9 +341,9 @@ pub fn tick_phase(
                     // branch and reload the whole screen in a loop.
                     game.phase = Phase::Normal;
                     game.phase_timer = 0.0;
-                    game.screen_age = 0.0;
                     game.dancers = 0.0;
                     game.pending = None;
+                    game.reset_crowd();
                     game.needs_load = true;
                     game.show_banner("BACK TO WORK", 1.6);
                 }

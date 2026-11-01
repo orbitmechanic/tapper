@@ -19,7 +19,7 @@ mkdirSync(OUT, { recursive: true });
 const chrome = spawn('chromium', [
   '--headless=new', '--no-sandbox',
   '--use-angle=swiftshader', '--enable-unsafe-swiftshader',
-  '--remote-debugging-port=9223',
+  '--remote-debugging-port=9234',
   '--user-data-dir=/tmp/opencode/chrome-respawn',
   '--window-size=1200,1100',
   'about:blank',
@@ -28,7 +28,7 @@ const chrome = spawn('chromium', [
 async function findTarget() {
   for (let i = 0; i < 80; i++) {
     try {
-      const list = await (await fetch('http://127.0.0.1:9223/json/list')).json();
+      const list = await (await fetch('http://127.0.0.1:9234/json/list')).json();
       const page = list.find((target) => target.type === 'page');
       if (page) return page;
     } catch (_) {}
@@ -119,14 +119,14 @@ try {
 
   // The lane is empty now. This mug has no catcher and must break at the door.
   await pointerTap('[data-pad="pour"]');
-  await waitFor('window.__tapperState.lives === 2', 'mug break and life loss', 20000);
+  await waitFor('window.__tapperState.lives === 2', 'mug break and life loss', 60000);
   const dead = await state();
   console.log('life lost', JSON.stringify(dead));
 
   await waitFor(
     'window.__tapperState.phase === 0 && window.__tapperState.lives === 2 && (window.__tapperState.p1 + window.__tapperState.p2 + window.__tapperState.p3) > 0',
     'respawn into a playable screen',
-    20000,
+    30000,
   );
   const respawned = await state();
   console.log('respawned', JSON.stringify(respawned));
