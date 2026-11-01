@@ -155,6 +155,8 @@ fn publish_state_bridge(
     mugs: Query<&Mug>,
 ) {
     let (lane, slot) = bt.single().map(|b| (b.lane, b.slot)).unwrap_or((0, 0.0));
+    let lane_patrons =
+        std::array::from_fn(|lane| patrons.iter().filter(|p| p.lane == lane).count());
     let phase = match game.phase {
         Phase::Normal => 0,
         Phase::Dying => 1,
@@ -170,6 +172,7 @@ fn publish_state_bridge(
         slot,
         patrons.iter().count(),
         mugs.iter().count(),
+        lane_patrons,
     );
 }
 
